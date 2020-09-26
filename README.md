@@ -1,2 +1,2 @@
-# renumber_by_adobe2
+# renumber_by_adobe
 老按键精灵了...就是把reference pages给更正过来...
