@@ -12,6 +12,10 @@ root_hd = None
 
 ab_rf_path=r"D:\AllDowns\newbooks\page_mid_pic\finished_pages_ab_rf.txt"
 
+already_path=r"D:\AllDowns\newbooks\already_trans.txt"
+
+if not os.path.exists(already_path):
+    open(already_path, 'a').close()
 
 def click_on_pos(pos_list):
     btn_pos = pos_list
@@ -47,9 +51,9 @@ def renumber(pdf_path,delta_page):
 
     adobe_str="Adobe Acrobat"
     adobe_hd=win32gui.FindWindowEx(root_hd,0,0,adobe_str)
-    if adobe_hd:
-        queding_hd=get_hd_from_child_hds(adobe_hd,4,"")
-        win32gui.SendMessage(queding_hd, win32con.BM_CLICK)
+    # if adobe_hd:
+    #     queding_hd=get_hd_from_child_hds(adobe_hd,4,"")
+    #     win32gui.SendMessage(queding_hd, win32con.BM_CLICK)
 
     bianpai_pos=[578,56]
     click_on_pos(bianpai_pos)
@@ -91,7 +95,16 @@ def renumber(pdf_path,delta_page):
     win32api.keybd_event(83,0,win32con.KEYEVENTF_KEYUP,0) #释放按键
     win32api.keybd_event(17,0,win32con.KEYEVENTF_KEYUP,0)
 
+    # 有些保存相当耗时...
+
+    time.sleep(5)
+
     win32gui.SendMessage(adobe_hd,win32con.WM_CLOSE,0,0)
+
+    time.sleep(2)
+
+    with open(already_path,"a",encoding="utf-8") as f:
+        f.write(pdf_path+"\n")
 
     print("one done.")
 
@@ -101,14 +114,32 @@ def main():
 
     lines=[each.strip("\n") for each in lines]
 
+    with open(already_path,"r",encoding="utf-8") as g:
+        already_set=set(g.readlines())
+
     for each_line in lines:
         delta_zone,_,_,filename_zone=each_line.split("\t\t\t")
         delta_page=delta_zone.split(":")[1]
         filename=filename_zone.split(":")[1]
         pdf_path=f"{target_dir}{os.sep}{filename}"
-        renumber(pdf_path,delta_page)
+        if int(delta_page)<0:
+            print("Delta page negative,please check:",pdf_path)
+            continue
+        if pdf_path+"\n" in already_set:
+            print(f"already:{pdf_path}")
+            continue
+        if not os.path.exists(pdf_path):
+            print("有点问题，不纠结...")
+            continue
+        if int(delta_page)!=0:
+            renumber(pdf_path,delta_page)
+        else:
+            print("重合！跳过...")
+            continue
+    print("all done.")
 
-
+if __name__=="__main__":
+    main()
 
 
 
